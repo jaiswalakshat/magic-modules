@@ -1,0 +1,413 @@
+# Copyright 2026 Google Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+name: 'RecoverableSnapshot'
+kind: 'compute#recoverableSnapshot'
+description: |
+  Represents a RecoverableSnapshot resource, which is a snapshot that has been soft-deleted
+  and is held in a recoverable state.
+references:
+  guides:
+    ###Todo: Update with the actual docs link
+    'Official Documentation': 'https://cloud.google.com/compute/docs/disks/create-recoverable-snapshots'
+    ###Todo: Update with the actual api link
+  api: 'https://cloud.google.com/compute/docs/reference/rest/v1/snapshots'
+
+# Marks the resource as beta-only. Ensure a beta version block is present in
+# provider.yaml.
+# Todo: Check if this resoruce need to be launched in beta version or directly to prod.
+# min_version: beta
+
+base_url: 'projects/{{project}}/global/recoverableSnapshots'
+### Todo: check if need to define this field and define self link
+has_self_link: true
+# URL for the resource's standard Get method. https://google.aip.dev/131
+# Terraform field names enclosed in double curly braces are replaced with
+# the field values from the resource at runtime.
+#self_link: 'projects/{{project}}/locations/{{location}}/resourcenames/{{name}}'
+
+immutable: true
+
+# URL for the resource's standard Create method, including query parameters.
+# https://google.aip.dev/133
+# Terraform field names enclosed in double curly braces are replaced with
+# the field values from the resource at runtime.
+
+# If there isn’t a create endpoint, set the create_url to point to the update endpoint.
+# ref: https://googlecloudplatform.github.io/magic-modules/best-practices/common-resource-patterns/
+#create_url: 'projects/{{project}}/locations/{{location}}/resourcenames?resourceId={{name}}'
+
+## Overrides the URL for the resource's standard Update method. (If unset, the
+## self_link URL is used by default.) https://google.aip.dev/134
+## Terraform field names enclosed in double curly braces are replaced with
+## the field values from the resource at runtime.
+## update_url: 'projects/{{project}}/locations/{{location}}/resourcenames/{{name}}'
+## The HTTP verb used to update a resource. Allowed values: :POST, :PUT, :PATCH. Default: :PUT.
+#update_verb: 'PATCH'
+## If true, the resource sets an `updateMask` query parameter listing modified
+## fields when updating the resource. If false, it does not.
+
+#update_mask: true
+
+# If true, code for handling long-running operations is generated along with
+# the resource. If false, that code is not generated.
+#autogen_async: true
+# Sets parameters for handling operations returned by the API.
+#async:
+#  #  actions: ['delete', 'recover']
+#  actions: ['create', 'delete', 'update']
+#  type: 'OpAsync'
+#  result:
+#    resource_inside_response: false
+
+
+collection_url_key: 'items'
+iam_policy:
+  parent_resource_attribute: 'name'
+  import_format:
+    - 'projects/{{project}}/global/recoverableSnapshots/{{name}}'
+    - '{{name}}'
+custom_code:
+  decoder: 'templates/terraform/decoders/snapshot.go.tmpl'
+#  pre_create: 'templates/terraform/pre_create/compute_snapshot_precreate_url.go.tmpl'
+sweeper:
+  url_substitutions:
+    - zone: "us-central1-a"
+
+parameters:
+#  - name: 'name'
+#    type: String
+#    required: true
+#    immutable: true
+#    url_param_only: true
+#    description: |
+#      NAME_DESCRIPTION
+
+properties:
+  - name: 'id'
+    type: Integer
+    description: "The unique identifier for the resource."
+    output: true
+  - name: 'name'
+    type: String
+    description: |
+      Name of the resource; provided by the client when the resource is
+      created. The name must be 1-63 characters long, and comply with
+      RFC1035. Specifically, the name must be 1-63 characters long and match
+      the regular expression `[a-z]([-a-z0-9]*[a-z0-9])?` which means the
+      first character must be a lowercase letter, and all following
+      characters must be a dash, lowercase letter, or digit, except the last
+      character, which cannot be a dash.
+    required: true
+    immutable: true
+  - name: 'description'
+    type: String
+    description: 'An optional description of this resource.'
+    immutable: true
+  - name: 'creationTimestamp'
+    type: Time
+    description: "Creation timestamp in RFC3339 format."
+    output: true
+  - name: 'purgeTimestamp'
+    type: Time
+    description: "Purge timestamp of recoverable snapshot in RFC3339 format."
+    output: true
+  - name: 'status'
+    type: Enum
+    description: "Status of the recoverable snapshot."
+    output: true
+    enum_values:
+      - 'UNKNOWN'
+      - 'CREATING'
+      - 'FAILED'
+      - 'READY'
+      - 'DELETING'
+      - 'RECOVERING'
+  - name: 'originalSnapshot'
+    type: NestedObject
+    description: "The original snapshot resource details."
+    output: true
+    properties:
+      - name: 'deletionTimestamp'
+        type: Time
+        description: "Deletion timestamp of the original snapshot."
+        output: true
+      - name: 'id'
+        type: Integer
+        description: "The unique identifier for the original snapshot."
+        output: true
+      - name: 'creationTimestamp'
+        type: Time
+        description: "Creation timestamp of the original snapshot."
+        output: true
+      - name: 'name'
+        type: String
+        description: "Name of the original snapshot."
+        output: true
+      - name: 'description'
+        type: String
+        description: "An optional description of the original snapshot."
+        output: true
+      - name: 'sourceDisk'
+        type: String
+        description: "The source disk used to create this snapshot."
+        output: true
+      - name: 'sourceDiskId'
+        type: String
+        description: "The ID value of the disk used to create this snapshot."
+        output: true
+      - name: 'diskSizeGb'
+        type: Integer
+        description: "Size of the source disk, specified in GB."
+        output: true
+      - name: 'storageBytes'
+        type: Integer
+        description: "A size of the storage used by the snapshot."
+        output: true
+      - name: 'storageBytesStatus'
+        type: Enum
+        description: "An indicator whether `storageBytes` is in a stable state."
+        output: true
+        enum_values:
+          - 'UP_TO_DATE'
+          - 'UPDATING'
+      - name: 'licenses'
+        type: Array
+        description: "A list of public visible licenses."
+        output: true
+        item_type:
+          type: String
+      - name: 'snapshotEncryptionKey'
+        type: NestedObject
+        description: |
+          Encrypts the snapshot using a customer-supplied encryption key.
+    
+          After you encrypt a snapshot using a customer-supplied key, you must
+          provide the same key if you use the snapshot later. For example, you
+          must provide the encryption key when you create a disk from the
+          encrypted snapshot in a future request.
+    
+          Customer-supplied encryption keys do not protect access to metadata of
+          the snapshot.
+    
+          If you do not provide an encryption key when creating the snapshot,
+          then the snapshot will be encrypted using an automatically generated
+          key and you do not need to provide a key to use the snapshot later.
+        properties:
+          - name: 'rawKey'
+            type: String
+            description: |
+              Specifies a 256-bit customer-supplied encryption key, encoded in
+              RFC 4648 base64 to either encrypt or decrypt this resource.
+            ignore_read: true
+            sensitive: true
+            custom_flatten: 'templates/terraform/custom_flatten/compute_snapshot_snapshot_encryption_raw_key.go.tmpl'
+          - name: 'rsaEncryptedKey'
+            type: String
+            description: |
+              Specifies an encryption key stored in Google Cloud KMS, encoded in
+              RFC 4648 base64 to either encrypt or decrypt this resource.
+            ignore_read: true
+            sensitive: true
+          - name: 'sha256'
+            type: String
+            description: |
+              The RFC 4648 base64 encoded SHA-256 hash of the customer-supplied
+              encryption key that protects this resource.
+            output: true
+            # TODO Change to ResourceRef once KMS is in Magic Modules
+          - name: 'kmsKeySelfLink'
+            type: String
+            description: |
+              The name of the encryption key that is stored in Google Cloud KMS.
+            api_name: kmsKeyName
+          - name: 'kmsKeyServiceAccount'
+            type: String
+            description: |
+              The service account used for the encryption request for the given KMS key.
+              If absent, the Compute Engine Service Agent service account is used.
+      - name: 'sourceDiskEncryptionKey'
+        type: NestedObject
+        description: |
+          The customer-supplied encryption key of the source snapshot. Required
+          if the source snapshot is protected by a customer-supplied encryption
+          key.
+        ignore_read: true
+        properties:
+          - name: 'rawKey'
+            type: String
+            description: |
+              Specifies a 256-bit customer-supplied encryption key, encoded in
+              RFC 4648 base64 to either encrypt or decrypt this resource.
+            # The docs list this field but it is never returned.
+            sensitive: true
+          - name: 'rsaEncryptedKey'
+            type: String
+            description: |
+              Specifies an encryption key stored in Google Cloud KMS, encoded in
+              RFC 4648 base64 to either encrypt or decrypt this resource.
+            sensitive: true
+          - name: 'kmsKeySelfLink'
+            type: String
+            description: |
+              The name of the encryption key that is stored in Google Cloud KMS.
+            api_name: kmsKeyName
+          - name: 'kmsKeyServiceAccount'
+            type: String
+            description: |
+              The service account used for the encryption request for the given KMS key.
+              If absent, the Compute Engine Service Agent service account is used.
+#      - name: 'selfLink'
+#        type: String
+#        description: "[Output Only] Server-defined URL for the resource."
+#        output: true
+#      - name: 'selfLinkWithId'
+#        type: String
+#        description: "[Output Only] Server-defined URL for this resource's resource id."
+#        output: true
+
+
+#
+#      - name: 'labels'
+#        type: KeyValueLabels
+#        description: "Labels applied to this snapshot."
+#        output: true
+
+
+
+      - name: 'labelFingerprint'
+        type: Fingerprint
+        description: "A fingerprint for the labels."
+        output: true
+      - name: 'licenseCodes'
+        type: Array
+        description: "Integer license codes."
+        output: true
+        item_type:
+          type: Integer
+      - name: 'storageLocations'
+        type: Array
+        description: "Cloud Storage bucket storage location."
+        output: true
+        item_type:
+          type: String
+      - name: 'autoCreated'
+        type: Boolean
+        description: "[Output Only] True if snapshots are automatically created."
+        output: true
+#      - name: 'guestOsFeatures'
+#        type: Array
+#        description: "[Output Only] A list of features to enable on the guest operating system."
+#        output: true
+#        item_type:
+#          type: NestedObject # GuestOsFeature
+      - name: 'downloadBytes'
+        type: Integer
+        description: "Number of bytes downloaded to restore a snapshot."
+        output: true
+      - name: 'full'
+        type: Boolean
+        description: "Indicates the created snapshot is a full snapshot."
+        output: true
+      - name: 'chainName'
+        type: String
+        description: "Name of the snapshot chain."
+        output: true
+      - name: 'sourceInstantSnapshot'
+        type: String
+        description: "The source instant snapshot used to create this snapshot."
+        output: true
+      - name: 'sourceInstantSnapshotId'
+        type: String
+        description: "[Output Only] The unique ID of the instant snapshot used to create this snapshot."
+        output: true
+#      - name: 'architecture'
+#        type: Enum
+#        description: "[Output Only] The architecture of the snapshot."
+#        output: true
+#        enum_values:
+#          - 'ARM64'
+#          - 'X86_64'
+      - name: 'userLicenses'
+        type: Array
+        description: "A list of user provided licenses."
+        output: true
+        item_type:
+          type: String
+      - name: 'snapshotType'
+        type: Enum
+        description: "Indicates the type of the snapshot."
+        output: true
+        enum_values:
+          - 'STANDARD'
+          - 'ARCHIVE'
+      - name: 'creationSizeBytes'
+        type: Integer
+        description: "Size in bytes of the snapshot at creation time."
+        output: true
+#      - name: 'maxRetentionDays'
+#        type: Integer
+#        description: "Number of days the snapshot should be retained."
+#        output: true
+      - name: 'enableConfidentialCompute'
+        type: Boolean
+        description: "Whether this snapshot is from a confidential compute disk."
+        output: true
+      - name: 'sourceDiskForRecoveryCheckpoint'
+        type: String
+        description: "The source disk for recovery checkpoint."
+        output: true
+#      - name: 'sourceInstantSnapshotEncryptionKey'
+#        type: NestedObject # CustomerEncryptionKey
+#        description: "Customer provided encryption key for Instant Snapshot."
+#        output: true
+      - name: 'region'
+        type: String
+        description: "URL of the region where the snapshot resides."
+        output: true
+      - name: 'snapshotGroupName'
+        type: String
+        description: "The snapshot group that this snapshot belongs to."
+        output: true
+      - name: 'snapshotGroupId'
+        type: String
+        description: "The unique ID of the snapshot group."
+        output: true
+
+
+# --- Regional RecoverableSnapshotsService ---
+# To represent the regional service, you would typically define a separate resource
+# or a section with a different base_url.
+# Example for Regional methods:
+# methods:
+#   regionGet:
+#     Description: Returns the specified regional RecoverableSnapshot resource.
+#     Verb: GET
+#     RelativePath: "regions/{{region}}/{{name}}"
+#     Parameters:
+#       project: ...
+#       region: ...
+#       resource_id: ...
+#     IAMPolicy: ["compute.regionRecoverableSnapshots.get"]
+#     Response: RecoverableSnapshot
+#   regionList:
+#     Description: Retrieves a list of regional RecoverableSnapshots.
+#     Verb: GET
+#     RelativePath: "regions/{{region}}"
+#     Parameters:
+#       project: ...
+#       region: ...
+#     IAMPolicy: ["compute.regionRecoverableSnapshots.list"]
+#     Response: RecoverableSnapshotList
+#   ... and so on for regional delete and recover.

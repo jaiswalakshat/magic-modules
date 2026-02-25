@@ -1,0 +1,64 @@
+// Check if Recoverable Snapshot exits else exit, User can not create Recoverable Snapshot
+
+    userAgent, err := tpgresource.GenerateUserAgentString(d, config.UserAgent)
+    if err != nil {
+        return err
+    }
+
+    obj := make(map[string]interface{})
+    nameProp, err := expandComputeRecoverableSnapshotName(d.Get("name"), d, config)
+    if err != nil {
+        return err
+    } else if v, ok := d.GetOkExists("name"); !tpgresource.IsEmptyValue(reflect.ValueOf(nameProp)) && (ok || !reflect.DeepEqual(v, nameProp)) {
+        obj["name"] = nameProp
+    }
+    descriptionProp, err := expandComputeRecoverableSnapshotDescription(d.Get("description"), d, config)
+    if err != nil {
+        return err
+    } else if v, ok := d.GetOkExists("description"); !tpgresource.IsEmptyValue(reflect.ValueOf(descriptionProp)) && (ok || !reflect.DeepEqual(v, descriptionProp)) {
+        obj["description"] = descriptionProp
+    }
+
+    log.Printf("[DEBUG] Creating new RecoverableSnapshot: %#v", obj)
+    billingProject := ""
+
+    project, err := tpgresource.GetProject(d, config)
+    if err != nil {
+        return fmt.Errorf("Error fetching project for RecoverableSnapshot: %s", err)
+    }
+    billingProject = project
+
+    // err == nil indicates that the billing_project value was found
+    if bp, err := tpgresource.GetBillingProject(d, config); err == nil {
+        billingProject = bp
+    }
+
+    headers := make(http.Header)
+    // Check if Recoverable Snapshot exits else exit, User can not create Recoverable Snapshot
+
+    getUrl, err := tpgresource.ReplaceVars(d, config, "{{"{{"}}ComputeBasePath{{"}}"}}projects/{{"{{"}}project{{"}}"}}/global/recoverableSnapshots/{{"{{"}}name{{"}}"}}")
+    if err != nil {
+        return err
+    }
+
+    _, err = transport_tpg.SendRequest(transport_tpg.SendRequestOptions{
+        Config:    config,
+        Method:    "GET",
+        Project:   billingProject,
+        RawURL:    getUrl,
+        UserAgent: userAgent,
+        Headers:   headers,
+    })
+
+    if err != nil {
+        return fmt.Errorf("Error fetching RecoverableSnapshot, and it cannot be created externally: %s", err)
+    }
+
+    // Store the ID now
+    id, err := tpgresource.ReplaceVars(d, config, "projects/{{"{{"}}project{{"}}"}}/global/recoverableSnapshots/{{"{{"}}name{{"}}"}}")
+    if err != nil {
+        return fmt.Errorf("Error constructing id: %s", err)
+    }
+    d.SetId(id)
+
+    return resourceComputeRecoverableSnapshotRead(d, meta)
